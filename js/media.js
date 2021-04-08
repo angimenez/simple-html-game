@@ -52,9 +52,9 @@ const loadMedia = new Promise((success, reject) => {
   ENEMY_SHOT.src = "/assets/sprites/Pollo.png";
   SHIP_DEAD.src = "/assets/sprites/naveRota.png";
   ENEMY_DEAD.src = "/assets/sprites/caraMuerto.png";
-  ENEMY.src = "/assets/sprites/cara.png";
-  SHIP.src = "/assets/sprites/nave.png";
-  BACKGROUND.src = "/assets/backgrounds/espacio.jpg";
+  ENEMY.src = "/assets/sprites/eye.png";
+  SHIP.src = "/assets/sprites/starship.png";
+  BACKGROUND.src = "/assets/backgrounds/earth.png";
   BACKGROUND.onload = () => {
     success("media loaded");
   };
