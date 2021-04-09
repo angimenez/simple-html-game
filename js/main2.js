@@ -5,13 +5,8 @@ const ctx = canvas.getContext("2d");
 const keypress = {};
 const FPS_ENABLED = true;
 
-const ship = {
-  status: "vivo",
-  x: 100,
-  y: canvas.height - 50,
-  width: 50,
-  height: 50,
-};
+const ship = new GameObject(100, canvas.height - 50, 50, 50);
+
 const SPEED = 0.8;
 function moverNave() {
   if (key_pressed[KEY_LEFT]) {
@@ -58,7 +53,7 @@ const drawShip = () => {
     ship.height, // Height sprite
     ship.x, // X position on canvas
     ship.y, // Y position on canvas
-    ship.width, // 
+    ship.width, //
     ship.height
   );
 };
@@ -73,12 +68,12 @@ const drawEnemy = () => {
     ship.height, // Height sprite
     ship.x + 100, // X position on canvas
     ship.y, // Y position on canvas
-    ship.width, // 
+    ship.width, //
     ship.height
   );
 };
 const drawBackground = () => {
-  ctx.drawImage(BACKGROUND, 0, 0,800,400);
+  ctx.drawImage(BACKGROUND, 0, 0, 800, 400);
 };
 
 const startGame = () => {
