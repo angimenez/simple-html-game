@@ -1,32 +1,21 @@
 const canvas = document.getElementById("game");
-canvas.width = 800;
-canvas.height = 400;
+canvas.width = CANVAS_WIDTH;
+canvas.height = CANVAS_HEIGHT;
 const ctx = canvas.getContext("2d");
-const keypress = {};
 const FPS_ENABLED = true;
+const ROOM_ID = "1234"; // For testing
 
-const ship = new GameObject(100, canvas.height - 50, 50, 50);
+let ships = [];
+
+let ship;
 
 const SPEED = 0.8;
-function moverNave() {
-  if (key_pressed[KEY_LEFT]) {
-    ship.x -= SPEED * deltaTime;
-    if (ship.x < 0) ship.x = 0;
-  }
-  if (key_pressed[KEY_RIGHT]) {
-    const limite = canvas.width - ship.width;
-    ship.x += SPEED * deltaTime;
-    if (ship.x > limite) ship.x = limite;
-  }
-  if (key_pressed[KEY_UP]) {
-    ship.y -= SPEED * deltaTime;
-    if (ship.y < 0) ship.y = 0;
-  }
-  if (key_pressed[KEY_DOWN]) {
-    const limite = canvas.height - ship.height;
-    ship.y += SPEED * deltaTime;
-    if (ship.y > limite) ship.y = limite;
-  }
+
+function updateShips() {
+  ships.forEach((ship) => {
+    ship.updateStatus();
+    ship.drawObject(ctx);
+  });
 }
 
 function showStatus() {
@@ -42,58 +31,39 @@ function showStatus() {
   // ctx.restore();
 }
 
-const drawShip = () => {
-  const columnSprite = Math.round(Math.random());
-  const rowSprite = 0;
-  ctx.drawImage(
-    SHIP, // Image source
-    columnSprite * ship.width, // Sprite position column
-    rowSprite * ship.height, // Sprite position row
-    ship.width, // Width sprite
-    ship.height, // Height sprite
-    ship.x, // X position on canvas
-    ship.y, // Y position on canvas
-    ship.width, //
-    ship.height
-  );
-};
-const drawEnemy = () => {
-  const columnSprite = 0;
-  const rowSprite = 0;
-  ctx.drawImage(
-    ENEMY, // Image source
-    columnSprite * ship.width, // Sprite position column
-    rowSprite * ship.height, // Sprite position row
-    ship.width, // Width sprite
-    ship.height, // Height sprite
-    ship.x + 100, // X position on canvas
-    ship.y, // Y position on canvas
-    ship.width, //
-    ship.height
-  );
-};
 const drawBackground = () => {
   ctx.drawImage(BACKGROUND, 0, 0, 800, 400);
 };
 
-const startGame = () => {
+const startGame = async () => {
   initializeTime();
+  const { arrObj, idObj } = await joinGame(ROOM_ID);
+  ships = arrObj.map(
+    ({ id, x, y, width, height }) => new GameObject(id, x, y, width, height)
+  );
+  ship = ships.find((obj) => obj.id === idObj);
+  ship.emitEvents = true;
+  attachKeyboardEvents(ship);
+  addSocketListener("updatedEnemy", (enemy) => {
+    const orig = ships.find((obj) => obj.id === enemy.id);
+    orig.key_pressed = enemy.key_pressed;
+  });
+  addSocketListener("newEnemy", ({ id, x, y, width, height }) => {
+    ships.push(new GameObject(id, x, y, width, height));
+  });
 };
 
 const frameLoop = () => {
   drawBackground();
   updateDeltaTime();
-  drawShip();
-  drawEnemy();
   showStatus();
-  moverNave();
+  updateShips();
   window.requestAnimationFrame(frameLoop);
 };
 
 const onload = () => {
-  loadMedia.then(() => {
-    attachKeyboardEvents();
-    startGame();
+  loadMedia.then(async () => {
+    await startGame();
     frameLoop();
   });
 };
