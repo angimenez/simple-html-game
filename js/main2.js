@@ -46,10 +46,19 @@ const startGame = async () => {
   attachKeyboardEvents(ship);
   addSocketListener("updatedEnemy", (enemy) => {
     const orig = ships.find((obj) => obj.id === enemy.id);
+    orig.x = enemy.x;
+    orig.y = enemy.y;
+
     orig.key_pressed = enemy.key_pressed;
   });
   addSocketListener("newEnemy", ({ id, x, y, width, height }) => {
     ships.push(new GameObject(id, x, y, width, height));
+  });
+  addSocketListener("userLeave", (enemyId) => {
+    ships.splice(
+      ships.findIndex((obj) => obj.id === enemyId),
+      1
+    );
   });
 };
 
