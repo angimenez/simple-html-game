@@ -1,10 +1,12 @@
 // Game object represents the base of characters
 
-const MAX_ACC = 0.1;
 const MAX_VEL = 15;
 
+const FORCE_POWER = 0.01;
 
-const FRICTION = 0.01;
+const FRICTION_VALUE = 1000;
+
+const FRICTION = 1 / FRICTION_VALUE;
 
 class GameObject {
   constructor(id, x, y, width, height, key_pressed = {}, vx = 0, vy = 0) {
@@ -21,11 +23,11 @@ class GameObject {
     this.accx = 0;
     this.accy = 0;
 
-
-
     this.mass = 1;
     this.forceX = 0;
     this.forceY = 0;
+
+    this.shield = 0;
   }
 
   getV1() {
@@ -45,8 +47,10 @@ class GameObject {
   }
 
   onKeyDown(keyCode) {
-    this.key_pressed[keyCode] = true;
-    if (this.emitEvents) emitData(this);
+    if (this.emitEvents && !this.key_pressed[keyCode]) {
+      this.key_pressed[keyCode] = true;
+      emitData(this);
+    }
   }
 
   onKeyUp(keyCode) {
@@ -54,73 +58,61 @@ class GameObject {
     if (this.emitEvents) emitData(this);
   }
 
-  //
-
   updateXPosition() {
-    if (
-      this.key_pressed[KEY_LEFT] &&
-      !this.key_pressed[KEY_RIGHT] &&
-      this.accx > MAX_ACC * -1
-    ) {
-      this.accx -= 0.01;
-    } else if (
-      this.key_pressed[KEY_RIGHT] &&
-      !this.key_pressed[KEY_LEFT] &&
-      this.accx < MAX_ACC
-    ) {
-      this.accx += 0.01;
+    if (this.key_pressed[KEY_LEFT] && !this.key_pressed[KEY_RIGHT]) {
+      this.forceX = -FORCE_POWER;
+    } else if (this.key_pressed[KEY_RIGHT] && !this.key_pressed[KEY_LEFT]) {
+      this.forceX = FORCE_POWER;
     } else {
-      this.accx = this.accx * 0.1;
-      this.vx = this.vx * 0.99;
+      this.forceX = 0;
     }
 
     const limit = CANVAS_WIDTH - this.width;
-    const vxUpdate = this.vx + this.accx * deltaTime;
-    this.vx = Math.abs(vxUpdate) > MAX_VEL ? this.vx : vxUpdate;
-    this.x += this.vx;
     if (this.x < 0) {
       this.accx = 0;
       this.x = 0;
       this.vx = Math.abs(this.vx) * 0.5;
-    }
-    if (this.x > limit) {
+    } else if (this.x > limit) {
       this.accx = 0;
       this.x = limit;
       this.vx = -Math.abs(this.vx) * 0.5;
+    } else {
+      this.accx = this.forceX / this.mass - this.vx * FRICTION;
+      this.vx += this.accx * deltaTime;
+      // console.log(`
+      // VelocidadX: ${this.vx}
+      // FuerzaX: ${this.forceX}
+      // AceleracionX: ${this.accx}`);
+      this.x += this.vx;
     }
   }
 
   updateYPosition() {
-    if (
-      this.key_pressed[KEY_UP] &&
-      !this.key_pressed[KEY_DOWN] &&
-      this.accy > MAX_ACC * -1
-    ) {
-      this.accy -= 0.1;
-    } else if (
-      !this.key_pressed[KEY_UP] &&
-      this.key_pressed[KEY_DOWN] &&
-      this.accy < MAX_ACC
-    ) {
-      this.accy += 0.1;
+    if (this.key_pressed[KEY_UP] && !this.key_pressed[KEY_DOWN]) {
+      this.forceY = -FORCE_POWER;
+    } else if (!this.key_pressed[KEY_UP] && this.key_pressed[KEY_DOWN]) {
+      this.forceY = FORCE_POWER;
     } else {
-      this.accy = this.accy * 0.1;
-      this.vy = this.vy * 0.99;
+      this.forceY = 0;
     }
 
     const limit = CANVAS_HEIGHT - this.height;
-    const vyUpdate = this.vy + this.accy * deltaTime;
-    this.vy = Math.abs(vyUpdate) > MAX_VEL ? this.vy : vyUpdate;
-    this.y += this.vy;
     if (this.y < 0) {
       this.accy = 0;
       this.y = 0;
       this.vy = Math.abs(this.vy) * 0.5;
-    }
-    if (this.y > limit) {
+    } else if (this.y > limit) {
       this.accy = 0;
       this.y = limit;
       this.vy = -Math.abs(this.vy) * 0.5;
+    } else {
+      this.accy = this.forceY / this.mass - this.vy * FRICTION;
+      this.vy += this.accy * deltaTime;
+      // console.log(`
+      // VelocidadX: ${this.vy}
+      // FuerzaX: ${this.forceY}
+      // AceleracionX: ${this.accy}`);
+      this.y += this.vy;
     }
   }
 
@@ -129,39 +121,42 @@ class GameObject {
     this.updateYPosition();
     for (let ship of ships) {
       if (this !== ship && collision(this, ship)) {
+        ship.vx = ship.vx + this.vx;
+        ship.vy = ship.vy + this.vy;
+        ship.shield = 60;
+
+        // this.vx = ship.vx + -this.vx;
+        // this.vy = ship.vy + -this.vy;
         this.vx *= -1;
         this.vy *= -1;
+        this.shield = 60;
       }
     }
   }
 
-  updateStatusOld() {
-    if (this.key_pressed[KEY_LEFT]) {
-      this.x -= this.vx * deltaTime;
-      if (this.x < 0) {
-        this.x = 0;
-      }
+  updateShield() {
+    if (this.shield > 0) {
+      this.shield--;
+      this.drawShield();
     }
-    if (this.key_pressed[KEY_RIGHT]) {
-      const limit = CANVAS_WIDTH - this.width;
-      this.x += this.vx * deltaTime;
-      if (this.x > limit) {
-        this.x = limit;
-      }
-    }
-    if (this.key_pressed[KEY_UP]) {
-      this.y -= this.vy * deltaTime;
-      if (this.y < 0) {
-        this.y = 0;
-      }
-    }
-    if (this.key_pressed[KEY_DOWN]) {
-      const limit = CANVAS_HEIGHT - this.height;
-      this.y += this.vy * deltaTime;
-      if (this.y > limit) {
-        this.y = limit;
-      }
-    }
+  }
+
+  drawShield() {
+    ctx.save();
+    ctx.beginPath();
+    ctx.arc(
+      this.x + this.width / 2,
+      this.y + this.height / 2,
+      30,
+      0,
+      2 * Math.PI
+    );
+    ctx.fillStyle = `rgba(0,255,0,${this.shield / 100})`;
+    ctx.fill();
+    ctx.lineWidth = 5;
+    ctx.strokeStyle = `rgba(0,100,100,${this.shield / 100})`;
+    ctx.stroke();
+    ctx.restore();
   }
 
   drawObject(ctx) {

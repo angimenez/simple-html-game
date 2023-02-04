@@ -4,23 +4,31 @@ const socket = io(SOCKET_URL, { autoconnect: true });
 
 socket.connect();
 
+let latency = 0;
+
 const getSocketLatency = () =>
   new Promise((resolve, reject) => {
     if (!socket) reject("Socket object is needed");
     const prevTime = Date.now();
     socket.emit("ping", (pong) => {
       const lastTime = Date.now();
-      const latency = (lastTime - prevTime) / 1000;
-      console.log(pong, latency);
+      latency = (lastTime - prevTime) / 1000;
       resolve(latency);
     });
   });
 
 getSocketLatency();
 
-const emitData = (data) => {
-  socket.emit("updateStatus", data);
-};
+const emitData = (data) =>
+  new Promise((resolve, reject) => {
+    if (!socket) reject("Socket object is needed");
+    const prevTime = Date.now();
+    socket.emit("updateStatus", data, () => {
+      const lastTime = Date.now();
+      latency = lastTime - prevTime;
+      resolve();
+    });
+  });
 
 const addSocketListener = (evt, callback) => {
   socket.on(evt, callback);

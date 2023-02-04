@@ -15,6 +15,7 @@ function updateShips() {
   ships.forEach((ship) => {
     ship.updateStatus(ships);
     ship.drawObject(ctx);
+    ship.updateShield();
   });
 }
 
@@ -28,6 +29,9 @@ function showStatus() {
     ctx.font = "16pt Arial";
     ctx.fillText("FPS: " + fps, 600, 50);
   }
+  ctx.fillStyle = "#0ffc03";
+  ctx.font = "16pt Arial";
+  ctx.fillText("Latencia: " + latency, 600, 80);
   // ctx.restore();
 }
 
@@ -70,9 +74,17 @@ const frameLoop = () => {
   window.requestAnimationFrame(frameLoop);
 };
 
+const loopSendData = async () => {
+  await emitData(ship);
+  setTimeout(() => {
+    loopSendData();
+  }, 20);
+};
+
 const onload = () => {
   loadMedia.then(async () => {
     await startGame();
+    loopSendData();
     frameLoop();
   });
 };
