@@ -1,22 +1,21 @@
 // Para detectar colisiones de objetos
 const collision = (a, b) => {
-  let hit = false;
-  if (b.x + b.ancho >= a.x && b.x < a.x + a.ancho) {
-    if (b.y + b.alto >= a.y && b.y < a.y + a.alto) {
-      hit = true;
+  if (b.x + b.width >= a.x && b.x < a.x + a.width) {
+    if (b.y + b.height >= a.y && b.y < a.y + a.height) {
+      return true;
     }
   }
-  if (b.x + b.ancho <= a.x && b.x >= a.x + a.ancho) {
-    if (b.y + b.alto <= a.y && b.y >= a.y + a.alto) {
-      hit = true;
+  if (b.x + b.width <= a.x && b.x >= a.x + a.width) {
+    if (b.y + b.height <= a.y && b.y >= a.y + a.height) {
+      return true;
     }
   }
-  if (a.x <= b.x && a.x + a.ancho >= b.x + b.ancho) {
-    if (a.y <= b.y && a.y + a.alto >= b.y + b.alto) {
-      hit = true;
+  if (a.x <= b.x && a.x + a.width >= b.x + b.width) {
+    if (a.y <= b.y && a.y + a.height >= b.y + b.height) {
+      return true;
     }
   }
-  return hit;
+  return false;
 };
 
 // Numero random

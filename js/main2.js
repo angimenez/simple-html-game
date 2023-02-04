@@ -13,7 +13,7 @@ const SPEED = 0.8;
 
 function updateShips() {
   ships.forEach((ship) => {
-    ship.updateStatus();
+    ship.updateStatus(ships);
     ship.drawObject(ctx);
   });
 }
