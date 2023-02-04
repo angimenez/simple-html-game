@@ -1,4 +1,4 @@
-const SOCKET_URL = "http://192.168.1.142:3000";
+const SOCKET_URL = "http://gamend.nicolasgimenez.com";
 
 const socket = io(SOCKET_URL, { autoconnect: true });
 
